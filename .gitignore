@@ -1,0 +1,14 @@
+__pycache__/
+venv/
+.venv/
+.idea/
+.vscode/
+*.pyc
+*.db
+
+# Python environment
+.venv/
+__pycache__/
+
+# Encrypted Vault file
+vault.encrypted

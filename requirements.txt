@@ -1,0 +1,4 @@
+cryptography==42.0.7
+npyscreen==4.10.5
+pytest==7.4.0
+windows-curses
