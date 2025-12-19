@@ -43,12 +43,10 @@ class AddCredentialForm(npyscreen.ActionForm):
         self.host_w = self.add(npyscreen.TitleText, name="Хост/IP:")
         self.user_w = self.add(npyscreen.TitleText, name="Пользователь:")
         self.pass_w = self.add(npyscreen.TitlePassword, name="Пароль:")
-        # Кнопка генератора
         self.add(npyscreen.ButtonPress, name="🎲 Сгенерировать пароль", when_pressed_function=self.generate_password)
         self.port_w = self.add(npyscreen.TitleText, name="Порт:", value="3306")
 
     def generate_password(self):
-        # Генерируем случайную строку (буквы + цифры + символы)
         chars = string.ascii_letters + string.digits + "!@#$%^&*"
         new_pass = ''.join(random.choice(chars) for _ in range(14))
         self.pass_w.value = new_pass
@@ -93,6 +91,7 @@ class ProjectManagementForm(npyscreen.FormBaseNew):
         self.add(npyscreen.FixedText, value="--- Действия ---", editable=False)
         self.add(npyscreen.ButtonPress, name="1. Добавить доступ", when_pressed_function=self.add_access)
         self.add(npyscreen.ButtonPress, name="2. Удалить выбранный", when_pressed_function=self.delete_access)
+        self.add(npyscreen.ButtonPress, name="3. Показать детали (ПАРОЛЬ)", when_pressed_function=self.show_details)
         self.add(npyscreen.ButtonPress, name="<- Назад в меню", when_pressed_function=self.on_back)
 
     def beforeEditing(self):
@@ -101,13 +100,36 @@ class ProjectManagementForm(npyscreen.FormBaseNew):
             self.project_label.value = current_proj.name
             self.creds_objects = list(current_proj.credentials.values())
             if self.creds_objects:
-                self.access_list.values = [f"[{c.user}@{c.host}] {c.name}" for c in self.creds_objects]
+                # В списке пароль скрыт звездочками для безопасности
+                self.access_list.values = [f"[{c.user}@{c.host}] {c.name} (******)" for c in self.creds_objects]
             else:
                 self.access_list.values = ["Доступов пока нет"]
         self.display()
 
     def add_access(self):
         self.parentApp.switchForm("ADD_CREDENTIAL")
+
+    def show_details(self):
+        selection = self.access_list.value
+        if selection is None or not hasattr(self, 'creds_objects') or not self.creds_objects:
+            npyscreen.notify_confirm("Сначала выберите доступ в списке!", title="Ошибка")
+            return
+
+        index = selection[0] if isinstance(selection, list) else selection
+        if index >= len(self.creds_objects):
+            return
+
+        cred = self.creds_objects[index]
+        npyscreen.notify_confirm(
+            f"Название:  {cred.name}\n"
+            f"Хост/IP:   {cred.host}\n"
+            f"Порт:      {cred.port}\n"
+            f"Логин:     {cred.user}\n\n"
+            f"ПАРОЛЬ:    {cred.password}",
+            title="Детали доступа (Расшифровано)",
+            wide=True,
+            editw=1
+        )
 
     def delete_access(self):
         selection = self.access_list.value
